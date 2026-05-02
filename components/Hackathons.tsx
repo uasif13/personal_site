@@ -35,8 +35,8 @@ export default function Hackathons() {
       link: "https://github.com/TylerL35/GrannyShield",
     },
     {
-      badge: "🏆 Winner",
-      badgeClass: "badge-gold",
+      badge: "Participant",
+      badgeClass: "badge-silver",
       name: "HireSync",
       event: "Google × Columbia Hackathon · March 2026",
       description: "AI avatar recruiting platform using streaming avatars for automated candidate interviews with Gemini-powered evaluation and agent workflows.",
@@ -50,7 +50,6 @@ export default function Hackathons() {
       event: "Stevens Health Hackathon · Nov 2019",
       description: "Alexa-powered app for Rheumatoid Arthritis patients — voice-driven health tracking and medication reminders. Selected from 200 applicants.",
       tech: ["Flask", "PostgreSQL", "Alexa SDK"],
-      link: "https://github.com/uasif13",
     },
     {
       badge: "💰 $1K Grant + $5K AWS",
@@ -59,7 +58,6 @@ export default function Hackathons() {
       event: "Princeton ReHack · Nov 2019",
       description: "NLP-powered app that automated scheduling in group chats. Recognized by 1517 Fund out of 20 teams with a grant and AWS credit to pursue the venture.",
       tech: ["NLP", "Python", "AWS"],
-      link: "https://github.com/uasif13",
     },
     {
       badge: "🥉 3rd Place — Mental Health",
@@ -68,7 +66,6 @@ export default function Hackathons() {
       event: "MIT NYC Grand Hack · Nov 2019",
       description: "Millennial-focused relationship counseling app. Pitched to Deerfield Management, placed 3rd out of 20 teams in the Mental Health track.",
       tech: ["React", "Node.js"],
-      link: "https://github.com/uasif13",
     },
   ];
 
