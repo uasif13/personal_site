@@ -45,12 +45,6 @@ export default function Contact() {
             ✉ uasif13@gmail.com
           </a>
           <a
-            href="tel:9739540063"
-            className="text-[var(--text)] no-underline text-[0.85rem] font-medium px-6 py-3 border border-[var(--border)] rounded flex items-center gap-2 transition-all hover:border-[var(--accent)] hover:text-[var(--accent)] hover:-translate-y-[2px]"
-          >
-            ☎ (973) 954-0063
-          </a>
-          <a
             href="https://www.linkedin.com/in/asifu"
             target="_blank"
             rel="noopener noreferrer"
