@@ -39,7 +39,7 @@ export default function Blog({ posts }: BlogProps) {
 
   return (
     <>
-      <section id="blog" ref={sectionRef} className="fade-section px-12 py-24">
+      <section id="blog" ref={sectionRef} className="fade-section px-6 sm:px-12 py-24">
         <div className="font-[var(--font-mono)] text-[0.7rem] text-[var(--accent)] tracking-[0.25em] uppercase mb-3">
           Blog
         </div>

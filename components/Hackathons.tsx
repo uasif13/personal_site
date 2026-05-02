@@ -35,8 +35,8 @@ export default function Hackathons() {
       link: "https://github.com/TylerL35/GrannyShield",
     },
     {
-      badge: "Participant",
-      badgeClass: "badge-silver",
+      badge: "🏆 Winner",
+      badgeClass: "badge-gold",
       name: "HireSync",
       event: "Google × Columbia Hackathon · March 2026",
       description: "AI avatar recruiting platform using streaming avatars for automated candidate interviews with Gemini-powered evaluation and agent workflows.",
@@ -50,6 +50,7 @@ export default function Hackathons() {
       event: "Stevens Health Hackathon · Nov 2019",
       description: "Alexa-powered app for Rheumatoid Arthritis patients — voice-driven health tracking and medication reminders. Selected from 200 applicants.",
       tech: ["Flask", "PostgreSQL", "Alexa SDK"],
+      link: "https://github.com/uasif13",
     },
     {
       badge: "💰 $1K Grant + $5K AWS",
@@ -58,6 +59,7 @@ export default function Hackathons() {
       event: "Princeton ReHack · Nov 2019",
       description: "NLP-powered app that automated scheduling in group chats. Recognized by 1517 Fund out of 20 teams with a grant and AWS credit to pursue the venture.",
       tech: ["NLP", "Python", "AWS"],
+      link: "https://github.com/uasif13",
     },
     {
       badge: "🥉 3rd Place — Mental Health",
@@ -66,13 +68,14 @@ export default function Hackathons() {
       event: "MIT NYC Grand Hack · Nov 2019",
       description: "Millennial-focused relationship counseling app. Pitched to Deerfield Management, placed 3rd out of 20 teams in the Mental Health track.",
       tech: ["React", "Node.js"],
+      link: "https://github.com/uasif13",
     },
   ];
 
   return (
     <>
       <div className="w-full h-[1px] bg-[var(--border)]"></div>
-      <section id="hackathons" ref={sectionRef} className="fade-section px-12 py-24">
+      <section id="hackathons" ref={sectionRef} className="fade-section px-6 sm:px-12 py-24">
         <div className="font-[var(--font-mono)] text-[0.7rem] text-[var(--accent)] tracking-[0.25em] uppercase mb-3">
           Hackathons
         </div>
@@ -80,7 +83,7 @@ export default function Hackathons() {
           Competition projects
         </h2>
 
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(340px,1fr))] gap-6 max-w-[1200px]">
+        <div className="grid grid-cols-1 md:grid-cols-[repeat(auto-fill,minmax(340px,1fr))] gap-6 max-w-[1200px]">
           {hackathons.map((hack, index) => (
             <div
               key={index}
@@ -123,7 +126,7 @@ export default function Hackathons() {
                 href={hack.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[0.8rem] text-[var(--accent)] no-underline font-medium inline-flex items-center gap-[0.35rem] transition-[gap] duration-200 hover:gap-[0.6rem]"
+                className="text-[0.8rem] text-[var(--accent)] no-underline font-medium inline-flex items-center gap-[0.35rem] whitespace-nowrap transition-[gap] duration-200 hover:gap-[0.6rem]"
               >
                 View on GitHub →
               </a>}

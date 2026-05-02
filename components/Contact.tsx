@@ -27,7 +27,7 @@ export default function Contact() {
   return (
     <>
       <div className="w-full h-[1px] bg-[var(--border)]"></div>
-      <section id="contact" ref={sectionRef} className="fade-section text-center px-12 py-32">
+      <section id="contact" ref={sectionRef} className="fade-section text-center px-6 sm:px-12 py-32">
         <div className="font-[var(--font-mono)] text-[0.7rem] text-[var(--accent)] tracking-[0.25em] uppercase mb-3">
           Contact
         </div>
