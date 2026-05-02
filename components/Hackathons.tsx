@@ -35,8 +35,8 @@ export default function Hackathons() {
       link: "https://github.com/TylerL35/GrannyShield",
     },
     {
-      badge: "🏆 Winner",
-      badgeClass: "badge-gold",
+      badge: "Participant",
+      badgeClass: "badge-silver",
       name: "HireSync",
       event: "Google × Columbia Hackathon · March 2026",
       description: "AI avatar recruiting platform using streaming avatars for automated candidate interviews with Gemini-powered evaluation and agent workflows.",
