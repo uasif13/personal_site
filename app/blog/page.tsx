@@ -7,8 +7,11 @@ export const metadata = {
   description: 'Writing and thinking about software engineering, distributed systems, and AI.',
 };
 
-export default function BlogPage() {
-  const posts = getAllPosts();
+// New CP-tracker blog posts live in the DB and should show up without a redeploy.
+export const dynamic = 'force-dynamic';
+
+export default async function BlogPage() {
+  const posts = await getAllPosts();
 
   return (
     <>

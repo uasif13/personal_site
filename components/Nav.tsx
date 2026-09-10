@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import ThemeToggle from './ThemeToggle';
 
 export default function Nav() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -10,7 +11,7 @@ export default function Nav() {
   const closeMenu = () => setIsMenuOpen(false);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-[100] backdrop-blur-[20px] bg-[rgba(10,10,12,0.8)] border-b border-[var(--border)]">
+    <nav className="fixed top-0 left-0 right-0 z-[100] backdrop-blur-[20px] bg-[var(--nav-bg)] border-b border-[var(--border)]">
       <div className="px-6 sm:px-12 py-5 flex justify-between items-center">
         <Link href="/" className="font-[var(--font-serif)] text-2xl text-[var(--accent)] no-underline tracking-tight" onClick={closeMenu}>
           AU
@@ -27,12 +28,16 @@ export default function Nav() {
           <Link href="/blog" className="text-[var(--text-muted)] no-underline text-[0.85rem] font-medium tracking-[0.08em] uppercase transition-colors hover:text-[var(--accent)]">
             Blog
           </Link>
+          <Link href="/cp" className="text-[var(--text-muted)] no-underline text-[0.85rem] font-medium tracking-[0.08em] uppercase transition-colors hover:text-[var(--accent)]">
+            CP Tracker
+          </Link>
           <Link href="/#contact" className="text-[var(--text-muted)] no-underline text-[0.85rem] font-medium tracking-[0.08em] uppercase transition-colors hover:text-[var(--accent)]">
             Contact
           </Link>
           <a href="/resume_4_26.pdf" download className="bg-[var(--accent)] text-[var(--bg)] px-5 py-2 rounded font-semibold text-[0.8rem] tracking-[0.06em] transition-all hover:opacity-85 hover:-translate-y-px">
             Download Resume ↓
           </a>
+          <ThemeToggle className="text-lg leading-none" />
         </div>
 
         {/* Mobile Hamburger */}
@@ -64,28 +69,39 @@ export default function Nav() {
           >
             Hackathons
           </Link>
-          <Link 
-            href="/blog" 
+          <Link
+            href="/blog"
             className="text-[var(--text-muted)] no-underline text-[0.9rem] font-medium tracking-[0.08em] uppercase transition-colors hover:text-[var(--accent)]"
             onClick={closeMenu}
           >
             Blog
           </Link>
-          <Link 
-            href="/#contact" 
+          <Link
+            href="/cp"
+            className="text-[var(--text-muted)] no-underline text-[0.9rem] font-medium tracking-[0.08em] uppercase transition-colors hover:text-[var(--accent)]"
+            onClick={closeMenu}
+          >
+            CP Tracker
+          </Link>
+          <Link
+            href="/#contact"
             className="text-[var(--text-muted)] no-underline text-[0.9rem] font-medium tracking-[0.08em] uppercase transition-colors hover:text-[var(--accent)]"
             onClick={closeMenu}
           >
             Contact
           </Link>
-          <a 
-            href="/resume_4_26.pdf" 
-            download 
+          <a
+            href="/resume_4_26.pdf"
+            download
             className="bg-[var(--accent)] text-[var(--bg)] px-5 py-2.5 rounded font-semibold text-[0.85rem] tracking-[0.06em] transition-all hover:opacity-85 text-center"
             onClick={closeMenu}
           >
             Download Resume ↓
           </a>
+          <div className="flex items-center gap-2 text-[0.9rem] font-medium tracking-[0.08em] uppercase text-[var(--text-muted)]">
+            Theme
+            <ThemeToggle className="text-lg leading-none" />
+          </div>
         </div>
       </div>
     </nav>

@@ -77,6 +77,30 @@ Your content here...
     └── resume_4_26.pdf
 ```
 
+## CP Tracker
+
+`/cp` is a LeetCode/competitive-programming tracker: a table of problems where each
+attempt is logged with how it was solved (no help / hints / read the solution), time
+taken, and a link to your code. Problems only enter the table once you've actually
+attempted them — there's no pre-populated problem bank — logging an attempt can
+optionally draft a blog post from your strategy notes.
+
+Setup:
+
+1. Copy `.env.local.example` to `.env.local` and fill in `DATABASE_URL` (a Neon
+   Postgres connection string — add it via Vercel's Storage tab, or create a free
+   project at neon.tech), `CP_ADMIN_PASSWORD`, and `SESSION_SECRET` (`openssl rand
+   -hex 32`).
+2. `npm run db:push` — creates the tables from `lib/db/schema.ts`.
+3. Log in at `/cp/login` with `CP_ADMIN_PASSWORD`, then log problems as you solve
+   them at `/cp/admin/log`.
+
+Set the same three env vars in your Vercel project settings for production.
+
+`scripts/data/neetcode250.json` (the full NeetCode 250 list) and `npm run db:seed`
+still exist but aren't part of normal setup — they're there for a future
+recommendation feature, not for pre-populating the tracker.
+
 ## Customization
 
 - **Colors**: Edit CSS variables in `app/globals.css`

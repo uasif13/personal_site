@@ -7,7 +7,7 @@ interface BlogPostPageProps {
 }
 
 export async function generateStaticParams() {
-  const posts = getAllPosts();
+  const posts = await getAllPosts();
   return posts.map((post) => ({
     slug: post.slug,
   }));
@@ -15,7 +15,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: BlogPostPageProps) {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
+  const post = await getPostBySlug(slug);
   
   if (!post) {
     return {
@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: BlogPostPageProps) {
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
+  const post = await getPostBySlug(slug);
 
   if (!post) {
     notFound();
@@ -73,7 +73,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           </div>
           
           <div 
-            className="prose prose-invert prose-lg max-w-none
+            className="prose prose-lg max-w-none
               prose-headings:font-[var(--font-serif)] prose-headings:tracking-tight prose-headings:font-normal
               prose-h1:text-[2.5rem] prose-h1:mb-6 prose-h1:mt-12
               prose-h2:text-[2rem] prose-h2:mb-4 prose-h2:mt-10

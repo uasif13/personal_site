@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
+import { getAllDbBlogPosts, getDbBlogPostBySlug } from './db/queries';
 
 const postsDirectory = path.join(process.cwd(), 'posts');
 
@@ -13,14 +14,13 @@ export interface BlogPost {
   content: string;
 }
 
-export function getAllPosts(): BlogPost[] {
-  // Check if posts directory exists
+function getFileSystemPosts(): BlogPost[] {
   if (!fs.existsSync(postsDirectory)) {
     return [];
   }
 
   const fileNames = fs.readdirSync(postsDirectory);
-  const allPosts = fileNames
+  return fileNames
     .filter((fileName) => fileName.endsWith('.md'))
     .map((fileName) => {
       const slug = fileName.replace(/\.md$/, '');
@@ -37,16 +37,9 @@ export function getAllPosts(): BlogPost[] {
         content,
       };
     });
-
-  // Sort posts by date (newest first)
-  return allPosts.sort((a, b) => {
-    const dateA = new Date(a.date);
-    const dateB = new Date(b.date);
-    return dateB.getTime() - dateA.getTime();
-  });
 }
 
-export function getPostBySlug(slug: string): BlogPost | null {
+function getFileSystemPostBySlug(slug: string): BlogPost | null {
   try {
     const fullPath = path.join(postsDirectory, `${slug}.md`);
     const fileContents = fs.readFileSync(fullPath, 'utf8');
@@ -59,6 +52,56 @@ export function getPostBySlug(slug: string): BlogPost | null {
       tags: data.tags || [],
       excerpt: data.excerpt || '',
       content,
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function getDbPosts(): Promise<BlogPost[]> {
+  try {
+    const dbPosts = await getAllDbBlogPosts();
+    return dbPosts.map((post) => ({
+      slug: post.slug,
+      title: post.title,
+      date: post.date,
+      tags: post.tags,
+      excerpt: post.excerpt,
+      content: post.content,
+    }));
+  } catch {
+    // CP tracker DB isn't configured yet — fall back to filesystem-only posts.
+    return [];
+  }
+}
+
+export async function getAllPosts(): Promise<BlogPost[]> {
+  const [fsPosts, dbPosts] = await Promise.all([
+    Promise.resolve(getFileSystemPosts()),
+    getDbPosts(),
+  ]);
+
+  return [...fsPosts, ...dbPosts].sort((a, b) => {
+    const dateA = new Date(a.date);
+    const dateB = new Date(b.date);
+    return dateB.getTime() - dateA.getTime();
+  });
+}
+
+export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
+  const fsPost = getFileSystemPostBySlug(slug);
+  if (fsPost) return fsPost;
+
+  try {
+    const dbPost = await getDbBlogPostBySlug(slug);
+    if (!dbPost) return null;
+    return {
+      slug: dbPost.slug,
+      title: dbPost.title,
+      date: dbPost.date,
+      tags: dbPost.tags,
+      excerpt: dbPost.excerpt,
+      content: dbPost.content,
     };
   } catch {
     return null;
