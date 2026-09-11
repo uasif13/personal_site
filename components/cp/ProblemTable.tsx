@@ -128,17 +128,17 @@ export default function ProblemTable({ problems, isAuthed }: ProblemTableProps) 
               <th className="text-left font-[var(--font-mono)] text-[0.65rem] text-[var(--text-muted)] tracking-[0.08em] uppercase px-4 py-3">
                 Solution
               </th>
-              {isAuthed && (
-                <th className="text-left font-[var(--font-mono)] text-[0.65rem] text-[var(--text-muted)] tracking-[0.08em] uppercase px-4 py-3">
-                  {' '}
-                </th>
-              )}
+              <th className="text-left font-[var(--font-mono)] text-[0.65rem] text-[var(--text-muted)] tracking-[0.08em] uppercase px-4 py-3">
+                {' '}
+              </th>
             </tr>
           </thead>
           <tbody>
             {filtered.map((problem) => {
               const latest = latestAttempt(problem);
               const isExpanded = expandedId === problem.id;
+              const hasNotes = problem.attempts.some((a) => a.notes);
+              const canExpand = hasNotes || isAuthed;
 
               return (
                 <Fragment key={problem.id}>
@@ -195,24 +195,51 @@ export default function ProblemTable({ problems, isAuthed }: ProblemTableProps) 
                         <span className="text-[var(--text-muted)] text-[0.75rem]">—</span>
                       )}
                     </td>
-                    {isAuthed && (
-                      <td className="px-4 py-3 align-top whitespace-nowrap">
+                    <td className="px-4 py-3 align-top whitespace-nowrap">
+                      {canExpand && (
                         <button
                           onClick={() => setExpandedId(isExpanded ? null : problem.id)}
                           className="font-[var(--font-mono)] text-[0.7rem] text-[var(--accent)] uppercase tracking-[0.06em]"
                         >
-                          {isExpanded ? 'Close' : 'Log another attempt'}
+                          {isExpanded ? 'Close' : hasNotes ? 'View notes' : 'Log another attempt'}
                         </button>
-                      </td>
-                    )}
+                      )}
+                    </td>
                   </tr>
                   {isExpanded && (
                     <tr className="border-b border-[var(--border)] last:border-b-0">
-                      <td colSpan={isAuthed ? 7 : 6} className="px-4 pb-4">
-                        <LogAttemptForm
-                          problemId={problem.id}
-                          onDone={() => setExpandedId(null)}
-                        />
+                      <td colSpan={7} className="px-4 pb-4">
+                        {problem.attempts.length > 0 && (
+                          <div className="flex flex-col gap-3 mb-4">
+                            {problem.attempts.map((attempt) => (
+                              <div
+                                key={attempt.id}
+                                className="bg-[var(--bg-card-hover)] border border-[var(--border)] rounded-lg p-3"
+                              >
+                                <div className="font-[var(--font-mono)] text-[0.7rem] text-[var(--text-muted)] mb-1">
+                                  {new Date(attempt.solvedAt).toLocaleDateString()} ·{' '}
+                                  {STATUS_LABELS[attempt.status]}
+                                  {attempt.durationMinutes ? ` · ${attempt.durationMinutes}m` : ''}
+                                </div>
+                                {attempt.notes ? (
+                                  <p className="text-[0.85rem] text-[var(--text)] whitespace-pre-wrap leading-[1.6]">
+                                    {attempt.notes}
+                                  </p>
+                                ) : (
+                                  <p className="text-[0.8rem] text-[var(--text-muted)] italic">
+                                    No notes for this attempt.
+                                  </p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {isAuthed && (
+                          <LogAttemptForm
+                            problemId={problem.id}
+                            onDone={() => setExpandedId(null)}
+                          />
+                        )}
                       </td>
                     </tr>
                   )}
