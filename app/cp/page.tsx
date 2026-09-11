@@ -3,8 +3,17 @@ import Link from 'next/link';
 import Nav from '@/components/Nav';
 import ProblemTable from '@/components/cp/ProblemTable';
 import StatsBar from '@/components/cp/StatsBar';
+import Recommendations from '@/components/cp/Recommendations';
 import { CP_SESSION_COOKIE, verifySessionToken } from '@/lib/auth';
-import { getAllProblemsWithAttempts, type ProblemWithAttempts } from '@/lib/db/queries';
+import {
+  getAllProblemsWithAttempts,
+  getDueReviews,
+  type DueReview,
+  type ProblemWithAttempts,
+} from '@/lib/db/queries';
+import { recommendNewProblems, recommendCodeforcesProblems } from '@/lib/cp/recommend';
+import type { Neetcode250Problem } from '@/lib/cp/neetcode250';
+import type { CodeforcesProblem } from '@/lib/cp/codeforces';
 
 export const metadata = {
   title: 'CP Tracker — Asif Uddin',
@@ -18,10 +27,15 @@ export default async function CpTrackerPage() {
   const isAuthed = await verifySessionToken(cookieStore.get(CP_SESSION_COOKIE)?.value);
 
   let problems: ProblemWithAttempts[] = [];
+  let dueReviews: DueReview[] = [];
+  let newSuggestions: Neetcode250Problem[] = [];
+  let cfSuggestions: CodeforcesProblem[] = [];
   let dbError = false;
 
   try {
-    problems = await getAllProblemsWithAttempts();
+    [problems, dueReviews] = await Promise.all([getAllProblemsWithAttempts(), getDueReviews()]);
+    newSuggestions = recommendNewProblems(problems);
+    cfSuggestions = recommendCodeforcesProblems(problems);
   } catch {
     dbError = true;
   }
@@ -51,8 +65,8 @@ export default async function CpTrackerPage() {
           </div>
           <p className="text-[0.9rem] text-[var(--text-muted)] leading-[1.7] mb-12 max-w-[640px]">
             A log of every problem attempted, how it was solved, and how long it
-            took — nothing is added until it&apos;s actually been attempted. Cross-referenced
-            against{' '}
+            took — nothing is added until it&apos;s actually been attempted. Recommendations
+            draw from{' '}
             <a
               href="https://neetcode.io/practice"
               target="_blank"
@@ -61,7 +75,16 @@ export default async function CpTrackerPage() {
             >
               NeetCode 250
             </a>{' '}
-            and the topic taxonomy on{' '}
+            and the full{' '}
+            <a
+              href="https://codeforces.com/problemset"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[var(--accent)] border-b border-[var(--accent-dim)] hover:border-[var(--accent)]"
+            >
+              Codeforces problemset
+            </a>
+            , with the topic taxonomy on{' '}
             <a
               href="https://youkn0wwho.academy/topic-list"
               target="_blank"
@@ -69,8 +92,8 @@ export default async function CpTrackerPage() {
               className="text-[var(--accent)] border-b border-[var(--accent-dim)] hover:border-[var(--accent)]"
             >
               youkn0wwho&apos;s Topic List
-            </a>
-            .
+            </a>{' '}
+            as a reference for deeper CP topics.
           </p>
 
           {dbError ? (
@@ -85,6 +108,12 @@ export default async function CpTrackerPage() {
             <>
               <StatsBar problems={problems} />
               <div className="mt-12">
+                <Recommendations
+                  dueReviews={dueReviews}
+                  newSuggestions={newSuggestions}
+                  cfSuggestions={cfSuggestions}
+                  isAuthed={isAuthed}
+                />
                 <ProblemTable problems={problems} isAuthed={isAuthed} />
               </div>
               {!isAuthed && (

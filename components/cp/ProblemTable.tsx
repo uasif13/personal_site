@@ -85,6 +85,7 @@ export default function ProblemTable({ problems, isAuthed }: ProblemTableProps) 
         >
           <option value="all">All sources</option>
           <option value="neetcode250">NeetCode 250</option>
+          <option value="codeforces">Codeforces</option>
           <option value="youkn0wwho">youkn0wwho</option>
           <option value="custom">Custom</option>
         </select>

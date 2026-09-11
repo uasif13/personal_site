@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 const PLATFORMS = ['leetcode', 'codeforces', 'atcoder', 'other'];
-const SOURCES = ['neetcode250', 'youkn0wwho', 'custom'];
+const SOURCES = ['neetcode250', 'codeforces', 'youkn0wwho', 'custom'];
 const STATUS_OPTIONS = [
   { value: 'solved_no_help', label: 'Solved — no help' },
   { value: 'solved_with_hints', label: 'Solved — used hints' },
@@ -12,15 +12,25 @@ const STATUS_OPTIONS = [
   { value: 'attempted_unsolved', label: 'Attempted — unsolved' },
 ];
 
-export default function LogProblemForm() {
+export interface LogProblemFormInitial {
+  name?: string;
+  url?: string;
+  platform?: string;
+  source?: string;
+  difficulty?: string;
+  topics?: string;
+  cfRating?: string;
+}
+
+export default function LogProblemForm({ initial }: { initial?: LogProblemFormInitial }) {
   const router = useRouter();
-  const [name, setName] = useState('');
-  const [url, setUrl] = useState('');
-  const [platform, setPlatform] = useState('leetcode');
-  const [source, setSource] = useState('custom');
-  const [difficulty, setDifficulty] = useState('');
-  const [topics, setTopics] = useState('');
-  const [cfRating, setCfRating] = useState('');
+  const [name, setName] = useState(initial?.name ?? '');
+  const [url, setUrl] = useState(initial?.url ?? '');
+  const [platform, setPlatform] = useState(initial?.platform ?? 'leetcode');
+  const [source, setSource] = useState(initial?.source ?? 'custom');
+  const [difficulty, setDifficulty] = useState(initial?.difficulty ?? '');
+  const [topics, setTopics] = useState(initial?.topics ?? '');
+  const [cfRating, setCfRating] = useState(initial?.cfRating ?? '');
   const [status, setStatus] = useState('solved_no_help');
   const [duration, setDuration] = useState('');
   const [solutionUrl, setSolutionUrl] = useState('');

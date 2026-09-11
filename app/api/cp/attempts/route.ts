@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createAttempt, draftBlogPostFromNotes, getProblemById } from '@/lib/db/queries';
+import {
+  createAttempt,
+  draftBlogPostFromNotes,
+  getProblemById,
+  updateReviewAfterAttempt,
+} from '@/lib/db/queries';
 
 const createAttemptSchema = z.object({
   problemId: z.number().int(),
@@ -37,5 +42,7 @@ export async function POST(request: NextRequest) {
       : null;
 
   const attempt = await createAttempt({ ...attemptInput, blogPostId });
+  await updateReviewAfterAttempt(problem.id, attemptInput.status, attemptInput.durationMinutes);
+
   return NextResponse.json({ attempt }, { status: 201 });
 }

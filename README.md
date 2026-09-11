@@ -85,6 +85,13 @@ taken, and a link to your code. Problems only enter the table once you've actual
 attempted them — there's no pre-populated problem bank — logging an attempt can
 optionally draft a blog post from your strategy notes.
 
+It also recommends what to do next: an SM-2 spaced-repetition schedule resurfaces
+problems you solved cleanly for review once they're due, and a "Try next" panel
+suggests unattempted problems from the NeetCode 250 (weighted toward topics you've
+covered least) and from the full Codeforces problemset (in a rating band just above
+your best clean solve, weighted toward untouched tags) — see `lib/cp/recommend.ts`
+and `lib/spaced-repetition.ts`.
+
 Setup:
 
 1. Copy `.env.local.example` to `.env.local` and fill in `DATABASE_URL` (a Neon
@@ -93,13 +100,14 @@ Setup:
    -hex 32`).
 2. `npm run db:push` — creates the tables from `lib/db/schema.ts`.
 3. Log in at `/cp/login` with `CP_ADMIN_PASSWORD`, then log problems as you solve
-   them at `/cp/admin/log`.
+   them at `/cp/admin/log` (or via a "Log this" link from a recommendation).
 
 Set the same three env vars in your Vercel project settings for production.
 
-`scripts/data/neetcode250.json` (the full NeetCode 250 list) and `npm run db:seed`
-still exist but aren't part of normal setup — they're there for a future
-recommendation feature, not for pre-populating the tracker.
+`lib/cp/data/neetcode250.json` and `lib/cp/data/codeforces.json` back the
+recommendation engine (the latter pulled from the official Codeforces
+`problemset.problems` API). `npm run db:seed` still exists but isn't part of normal
+setup — it's unused by the live tracker.
 
 ## Customization
 

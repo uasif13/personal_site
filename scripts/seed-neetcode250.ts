@@ -1,7 +1,7 @@
 /**
  * Seeds the `problems` table with the NeetCode 250 list.
  *
- * Data source: scripts/data/neetcode250.json, sourced from
+ * Data source: lib/cp/data/neetcode250.json, sourced from
  * https://github.com/ascherj/neetcode-250-guide (extracted 2024) — 250 problems
  * with name, difficulty, category, and LeetCode URL. Re-running this script is
  * safe; it skips problems whose URL is already in the table.
@@ -13,24 +13,16 @@
  */
 import { db } from '../lib/db';
 import { problems } from '../lib/db/schema';
-import data from './data/neetcode250.json';
-
-function toTopicSlug(category: string): string {
-  return category
-    .toLowerCase()
-    .replace(/&/g, 'and')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-}
+import { NEETCODE_250, categorySlug } from '../lib/cp/neetcode250';
 
 async function main() {
-  const rows = data.problems.map((p) => ({
+  const rows = NEETCODE_250.map((p) => ({
     name: p.name,
     url: p.leetcode_url,
     source: 'neetcode250',
     platform: 'leetcode',
     difficulty: p.difficulty,
-    topics: [toTopicSlug(p.category)],
+    topics: [categorySlug(p.category)],
     pattern: p.category,
   }));
 

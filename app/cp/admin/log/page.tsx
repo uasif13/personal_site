@@ -5,7 +5,21 @@ export const metadata = {
   title: 'Log a Problem — CP Tracker',
 };
 
-export default function LogProblemPage() {
+interface LogProblemPageProps {
+  searchParams: Promise<{
+    name?: string;
+    url?: string;
+    platform?: string;
+    source?: string;
+    difficulty?: string;
+    topics?: string;
+    cfRating?: string;
+  }>;
+}
+
+export default async function LogProblemPage({ searchParams }: LogProblemPageProps) {
+  const params = await searchParams;
+
   return (
     <>
       <Nav />
@@ -18,7 +32,7 @@ export default function LogProblemPage() {
             Problems only enter the tracker once you&apos;ve actually attempted them —
             fill in what you solved and how it went.
           </p>
-          <LogProblemForm />
+          <LogProblemForm initial={params} />
         </div>
       </main>
     </>

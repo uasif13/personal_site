@@ -5,12 +5,13 @@ import {
   createProblem,
   draftBlogPostFromNotes,
   getProblemByUrl,
+  updateReviewAfterAttempt,
 } from '@/lib/db/queries';
 
 const logProblemSchema = z.object({
   name: z.string().min(1),
   url: z.string().url(),
-  source: z.enum(['neetcode250', 'youkn0wwho', 'custom']),
+  source: z.enum(['neetcode250', 'codeforces', 'youkn0wwho', 'custom']),
   platform: z.enum(['leetcode', 'codeforces', 'atcoder', 'other']),
   difficulty: z.string().min(1),
   topics: z.array(z.string()).default([]),
@@ -55,6 +56,7 @@ export async function POST(request: NextRequest) {
     notes,
     blogPostId,
   });
+  await updateReviewAfterAttempt(problem.id, status, durationMinutes);
 
   return NextResponse.json({ problem, attempt }, { status: 201 });
 }
