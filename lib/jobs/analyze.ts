@@ -147,6 +147,7 @@ export async function analyzeJobDescription(
     schema: INPUT_SCHEMA as unknown as Record<string, unknown>,
     toolName: 'record_job_analysis',
     toolDescription: 'Record the structured findings extracted from this job posting.',
+    timeoutMs: 110_000,
     validate: (raw) => analysisSchema.parse(raw),
   });
 

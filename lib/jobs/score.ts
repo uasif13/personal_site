@@ -158,6 +158,7 @@ export async function scoreResumeAgainstJob(
     toolName: 'record_resume_review',
     toolDescription: 'Record the ATS score and tailored resume adjustments for this posting.',
     maxTokens: 8192,
+    timeoutMs: 280_000,
     validate: (raw) => scoreSchema.parse(raw),
   });
 

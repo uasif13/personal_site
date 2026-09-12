@@ -2,7 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getApplicationById, updateApplication } from '@/lib/db/jobs';
 import { analyzeJobDescription } from '@/lib/jobs/analyze';
-import { AnthropicApiError, MissingApiKeyError } from '@/lib/jobs/anthropic';
+import {
+  AnthropicApiError,
+  AnthropicTimeoutError,
+  MissingApiKeyError,
+  TruncatedResponseError,
+} from '@/lib/jobs/anthropic';
 
 const schema = z.object({
   description: z.string().min(40, 'Paste the job description first — this one is too short to analyze.'),
@@ -12,7 +17,9 @@ const schema = z.object({
   applicationId: z.number().int().optional().nullable(),
 });
 
-export const maxDuration = 60;
+// Generous: observed latency for these calls ranges from ~14s to ~97s.
+// The platform clamps this to the plan's function duration limit.
+export const maxDuration = 120;
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
@@ -42,6 +49,18 @@ export async function POST(request: NextRequest) {
     console.error('Job analysis failed:', error);
     // Surface causes the user can actually act on — exhausted credits, a revoked
     // key, a rate limit — rather than making them dig through the server log.
+    if (error instanceof AnthropicTimeoutError) {
+      return NextResponse.json(
+        { error: `Analysis timed out — the model took too long. Try again; if it keeps happening your hosting plan's function limit is likely the cap.` },
+        { status: 504 }
+      );
+    }
+    if (error instanceof TruncatedResponseError) {
+      return NextResponse.json(
+        { error: `Analysis was cut off before it finished. Try again.` },
+        { status: 502 }
+      );
+    }
     if (error instanceof AnthropicApiError && error.isActionable) {
       return NextResponse.json({ error: `Analysis failed — ${error.apiMessage}` }, { status: 502 });
     }
