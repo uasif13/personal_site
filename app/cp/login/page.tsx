@@ -7,6 +7,9 @@ import Nav from '@/components/Nav';
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const next = searchParams.get('next') || '/cp';
+  // One password guards both trackers; name the one the visitor was headed to.
+  const title = next.startsWith('/jobs') ? 'Job Tracker Login' : 'CP Tracker Login';
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -29,7 +32,7 @@ function LoginForm() {
       return;
     }
 
-    router.push(searchParams.get('next') || '/cp');
+    router.push(next);
     router.refresh();
   }
 
@@ -37,7 +40,7 @@ function LoginForm() {
     <main className="min-h-screen pt-32 pb-24 px-6 sm:px-12 flex justify-center">
       <div className="max-w-[400px] w-full">
         <h1 className="font-[var(--font-serif)] text-[2.5rem] tracking-tight font-normal mb-8">
-          CP Tracker Login
+          {title}
         </h1>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <input

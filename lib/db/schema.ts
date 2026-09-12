@@ -6,6 +6,7 @@ import {
   real,
   timestamp,
   varchar,
+  jsonb,
 } from 'drizzle-orm/pg-core';
 
 export const problems = pgTable('problems', {
@@ -44,6 +45,44 @@ export const attempts = pgTable('attempts', {
   notes: text('notes'),
   blogPostId: integer('blog_post_id').references(() => blogPosts.id),
   solvedAt: timestamp('solved_at').notNull().defaultNow(),
+});
+
+// Resumes and cover letters attached to job applications. The bytes live here
+// rather than in object storage so they inherit the database's privacy — they're
+// only ever reachable through the login-gated /api/jobs/files/[id] route. Stored
+// base64-encoded in a text column: `bytea` over the neon-http driver round-trips
+// as hex strings and needs a custom type, and the 33% size cost is irrelevant
+// for the few-hundred-KB PDFs this holds.
+export const jobFiles = pgTable('job_files', {
+  id: serial('id').primaryKey(),
+  kind: varchar('kind', { length: 16 }).notNull(), // 'resume' | 'cover_letter'
+  filename: text('filename').notNull(),
+  contentType: varchar('content_type', { length: 128 }).notNull(),
+  sizeBytes: integer('size_bytes').notNull(),
+  data: text('data').notNull(), // base64
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+export const jobApplications = pgTable('job_applications', {
+  id: serial('id').primaryKey(),
+  positionName: text('position_name').notNull(),
+  company: text('company').notNull().default(''),
+  positionLink: text('position_link'),
+  status: varchar('status', { length: 32 }).notNull().default('to_apply'), // 'to_apply' | 'applied' | 'interviewing' | 'rejected' | 'accepted'
+  dateApplied: varchar('date_applied', { length: 32 }), // YYYY-MM-DD; null while still 'to_apply'
+  description: text('description').notNull().default(''),
+  // Auto-filled from the description by the analyzer, then freely editable.
+  yearsExperience: text('years_experience'),
+  skills: text('skills').array().notNull().default([]),
+  notes: text('notes'),
+  // Analyzer output (see lib/jobs/analyze.ts) and resume-vs-description scoring
+  // (see lib/jobs/score.ts), cached so a page load never re-bills the API.
+  analysis: jsonb('analysis'),
+  resumeScore: jsonb('resume_score'),
+  resumeFileId: integer('resume_file_id').references(() => jobFiles.id),
+  coverLetterFileId: integer('cover_letter_file_id').references(() => jobFiles.id),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
 // One row per problem, tracking its SM-2 spaced-repetition state. Created/updated

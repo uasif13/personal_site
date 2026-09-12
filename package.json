@@ -16,6 +16,7 @@
     "@tailwindcss/typography": "^0.5.19",
     "drizzle-orm": "^0.45.2",
     "gray-matter": "^4.0.3",
+    "jspdf": "^4.2.1",
     "next": "^15",
     "next-mdx-remote": "^6.0.0",
     "react": "^19",

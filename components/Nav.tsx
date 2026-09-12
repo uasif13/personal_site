@@ -31,6 +31,9 @@ export default function Nav() {
           <Link href="/cp" className="text-[var(--text-muted)] no-underline text-[0.85rem] font-medium tracking-[0.08em] uppercase transition-colors hover:text-[var(--accent)]">
             CP Tracker
           </Link>
+          <Link href="/jobs" className="text-[var(--text-muted)] no-underline text-[0.85rem] font-medium tracking-[0.08em] uppercase transition-colors hover:text-[var(--accent)]">
+            Jobs
+          </Link>
           <Link href="/#contact" className="text-[var(--text-muted)] no-underline text-[0.85rem] font-medium tracking-[0.08em] uppercase transition-colors hover:text-[var(--accent)]">
             Contact
           </Link>
@@ -82,6 +85,13 @@ export default function Nav() {
             onClick={closeMenu}
           >
             CP Tracker
+          </Link>
+          <Link
+            href="/jobs"
+            className="text-[var(--text-muted)] no-underline text-[0.9rem] font-medium tracking-[0.08em] uppercase transition-colors hover:text-[var(--accent)]"
+            onClick={closeMenu}
+          >
+            Jobs
           </Link>
           <Link
             href="/#contact"

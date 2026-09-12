@@ -109,6 +109,49 @@ recommendation engine (the latter pulled from the official Codeforces
 `problemset.problems` API). `npm run db:seed` still exists but isn't part of normal
 setup — it's unused by the live tracker.
 
+## Job Tracker
+
+`/jobs` is a private application tracker — unlike `/cp`, which is public to read,
+every route under `/jobs` and `/api/jobs` requires the session cookie, and the page
+is marked `noindex`. It's guarded by the same `CP_ADMIN_PASSWORD` login at
+`/cp/login`, so one password unlocks both trackers.
+
+Each row holds the date applied, status (to apply / applied / interviewing /
+rejected / accepted), position name and link, the pasted job description, years of
+experience, skills, the resume and optional cover letter used, and free-form notes.
+Status can be changed straight from the table, which stamps the applied date the
+first time a row leaves "To apply".
+
+Two features read the posting for you, both backed by the Anthropic API:
+
+- **Curate the findings** (`lib/jobs/analyze.ts`) pulls the top skills and
+  technologies out of the description, separating hard requirements from
+  preferences, and lists the literal phrases an ATS is likely to match on. Running
+  it also auto-fills the years-of-experience and skills fields, which stay
+  ordinary editable inputs afterwards.
+- **Rate my resume** (`lib/jobs/score.ts`) grades the attached resume against that
+  specific posting: an 0-100 ATS estimate, matched and missing keywords, concrete
+  rewrites of existing bullets, and parsing problems to fix before submitting. A
+  PDF resume is passed to the model natively so layout is judged too. The prompt
+  forbids inventing experience — rewrites are traceable to what's already on the
+  resume, and a missing metric comes back as `[X]` for you to fill in.
+
+Both results are cached on the application row, so reopening a row never re-bills
+the API; use "Re-analyze" / "Re-score" to refresh. Without `ANTHROPIC_API_KEY` the
+rest of the tracker works normally and only these two buttons return an error.
+
+The pasted description collapses out of the way once saved and can be exported to
+a PDF ("Save as PDF") so the listing survives being taken down.
+
+Resumes and cover letters are stored base64-encoded in Postgres rather than object
+storage, so they inherit the database's privacy and are only reachable through the
+login-gated `/api/jobs/files/[id]` route. Deleting an application deletes its
+attachments too. Uploads are capped at 4MB and limited to PDF, Word, and text.
+
+Setup is the CP tracker's setup plus `ANTHROPIC_API_KEY` in `.env.local` (and in
+your Vercel project settings), then `npm run db:push` to create the
+`job_applications` and `job_files` tables.
+
 ## Customization
 
 - **Colors**: Edit CSS variables in `app/globals.css`
