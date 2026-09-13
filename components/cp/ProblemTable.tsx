@@ -97,10 +97,11 @@ export default function ProblemTable({ problems, isAuthed }: ProblemTableProps) 
   const [editingAttemptId, setEditingAttemptId] = useState<number | null>(null);
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>('asc');
-  const [difficultyMode, setDifficultyMode] = useState<'leetcode' | 'codeforces'>('leetcode');
+  const [platformFilter, setPlatformFilter] = useState<'all' | 'leetcode' | 'codeforces'>('all');
 
   const filtered = useMemo(() => {
     return problems.filter((p) => {
+      if (platformFilter !== 'all' && p.platform !== platformFilter) return false;
       if (difficulty !== 'all' && p.difficulty.toLowerCase() !== difficulty) return false;
       if (source !== 'all' && p.source !== source) return false;
       if (nameFilter && !p.name.toLowerCase().includes(nameFilter.toLowerCase())) return false;
@@ -114,7 +115,7 @@ export default function ProblemTable({ problems, isAuthed }: ProblemTableProps) 
       }
       return true;
     });
-  }, [problems, difficulty, source, status, nameFilter, topicFilter]);
+  }, [problems, platformFilter, difficulty, source, status, nameFilter, topicFilter]);
 
   const sorted = useMemo(() => {
     if (!sortField) return filtered;
@@ -230,34 +231,23 @@ export default function ProblemTable({ problems, isAuthed }: ProblemTableProps) 
               </th>
               <th className="px-4 pb-3">
                 <div className="flex gap-1 mb-1">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setDifficultyMode('leetcode');
-                      setDifficulty('all');
-                    }}
-                    className={`flex-1 rounded px-1.5 py-0.5 text-[0.65rem] font-[var(--font-mono)] normal-case tracking-normal border ${
-                      difficultyMode === 'leetcode'
-                        ? 'bg-[var(--accent)] text-[var(--bg)] border-[var(--accent)]'
-                        : 'bg-[var(--bg)] text-[var(--text-muted)] border-[var(--border)]'
-                    }`}
-                  >
-                    LC
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setDifficultyMode('codeforces');
-                      setDifficulty('all');
-                    }}
-                    className={`flex-1 rounded px-1.5 py-0.5 text-[0.65rem] font-[var(--font-mono)] normal-case tracking-normal border ${
-                      difficultyMode === 'codeforces'
-                        ? 'bg-[var(--accent)] text-[var(--bg)] border-[var(--accent)]'
-                        : 'bg-[var(--bg)] text-[var(--text-muted)] border-[var(--border)]'
-                    }`}
-                  >
-                    CF
-                  </button>
+                  {(['all', 'leetcode', 'codeforces'] as const).map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => {
+                        setPlatformFilter(p);
+                        setDifficulty('all');
+                      }}
+                      className={`flex-1 rounded px-1.5 py-0.5 text-[0.65rem] font-[var(--font-mono)] normal-case tracking-normal border ${
+                        platformFilter === p
+                          ? 'bg-[var(--accent)] text-[var(--bg)] border-[var(--accent)]'
+                          : 'bg-[var(--bg)] text-[var(--text-muted)] border-[var(--border)]'
+                      }`}
+                    >
+                      {p === 'all' ? 'All' : p === 'leetcode' ? 'LC' : 'CF'}
+                    </button>
+                  ))}
                 </div>
                 <select
                   value={difficulty}
@@ -265,19 +255,19 @@ export default function ProblemTable({ problems, isAuthed }: ProblemTableProps) 
                   className="w-full bg-[var(--bg)] border border-[var(--border)] rounded px-2 py-1.5 text-[0.75rem] text-[var(--text)] font-normal normal-case tracking-normal"
                 >
                   <option value="all">All</option>
-                  {difficultyMode === 'leetcode' ? (
+                  {platformFilter !== 'codeforces' && (
                     <>
                       <option value="easy">Easy</option>
                       <option value="medium">Medium</option>
                       <option value="hard">Hard</option>
                     </>
-                  ) : (
+                  )}
+                  {platformFilter !== 'leetcode' &&
                     CF_RATINGS.map((rating) => (
                       <option key={rating} value={String(rating)}>
                         {rating}
                       </option>
-                    ))
-                  )}
+                    ))}
                 </select>
               </th>
               <th className="px-4 pb-3">
