@@ -3,6 +3,7 @@
 import { Fragment, useMemo, useState } from 'react';
 import type { ProblemWithAttempts } from '@/lib/db/queries';
 import LogAttemptForm from './LogAttemptForm';
+import EditAttemptForm from './EditAttemptForm';
 
 interface ProblemTableProps {
   problems: ProblemWithAttempts[];
@@ -32,6 +33,7 @@ export default function ProblemTable({ problems, isAuthed }: ProblemTableProps) 
   const [status, setStatus] = useState('all');
   const [search, setSearch] = useState('');
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [editingAttemptId, setEditingAttemptId] = useState<number | null>(null);
 
   const filtered = useMemo(() => {
     return problems.filter((p) => {
@@ -211,27 +213,62 @@ export default function ProblemTable({ problems, isAuthed }: ProblemTableProps) 
                       <td colSpan={7} className="px-4 pb-4">
                         {problem.attempts.length > 0 && (
                           <div className="flex flex-col gap-3 mb-4">
-                            {problem.attempts.map((attempt) => (
-                              <div
-                                key={attempt.id}
-                                className="bg-[var(--bg-card-hover)] border border-[var(--border)] rounded-lg p-3"
-                              >
-                                <div className="font-[var(--font-mono)] text-[0.7rem] text-[var(--text-muted)] mb-1">
-                                  {new Date(attempt.solvedAt).toLocaleDateString()} ·{' '}
-                                  {STATUS_LABELS[attempt.status]}
-                                  {attempt.durationMinutes ? ` · ${attempt.durationMinutes}m` : ''}
+                            {problem.attempts.map((attempt) => {
+                              const wasEdited =
+                                new Date(attempt.updatedAt).getTime() -
+                                  new Date(attempt.solvedAt).getTime() >
+                                2_000;
+                              const isEditing = editingAttemptId === attempt.id;
+
+                              if (isEditing) {
+                                return (
+                                  <EditAttemptForm
+                                    key={attempt.id}
+                                    attempt={attempt}
+                                    onDone={() => setEditingAttemptId(null)}
+                                  />
+                                );
+                              }
+
+                              return (
+                                <div
+                                  key={attempt.id}
+                                  className="bg-[var(--bg-card-hover)] border border-[var(--border)] rounded-lg p-3"
+                                >
+                                  <div className="flex justify-between items-start gap-3 mb-1">
+                                    <div className="font-[var(--font-mono)] text-[0.7rem] text-[var(--text-muted)]">
+                                      {new Date(attempt.solvedAt).toLocaleDateString()} ·{' '}
+                                      {STATUS_LABELS[attempt.status]}
+                                      {attempt.durationMinutes ? ` · ${attempt.durationMinutes}m` : ''}
+                                      {wasEdited && (
+                                        <>
+                                          {' '}
+                                          · edited{' '}
+                                          {new Date(attempt.updatedAt).toLocaleString()}
+                                        </>
+                                      )}
+                                    </div>
+                                    {isAuthed && (
+                                      <button
+                                        onClick={() => setEditingAttemptId(attempt.id)}
+                                        className="font-[var(--font-mono)] text-[0.65rem] text-[var(--accent)] uppercase tracking-[0.06em] whitespace-nowrap"
+                                      >
+                                        Edit
+                                      </button>
+                                    )}
+                                  </div>
+                                  {attempt.notes ? (
+                                    <p className="text-[0.85rem] text-[var(--text)] whitespace-pre-wrap leading-[1.6]">
+                                      {attempt.notes}
+                                    </p>
+                                  ) : (
+                                    <p className="text-[0.8rem] text-[var(--text-muted)] italic">
+                                      No notes for this attempt.
+                                    </p>
+                                  )}
                                 </div>
-                                {attempt.notes ? (
-                                  <p className="text-[0.85rem] text-[var(--text)] whitespace-pre-wrap leading-[1.6]">
-                                    {attempt.notes}
-                                  </p>
-                                ) : (
-                                  <p className="text-[0.8rem] text-[var(--text-muted)] italic">
-                                    No notes for this attempt.
-                                  </p>
-                                )}
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         )}
                         {isAuthed && (

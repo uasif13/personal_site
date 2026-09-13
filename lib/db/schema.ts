@@ -45,6 +45,7 @@ export const attempts = pgTable('attempts', {
   notes: text('notes'),
   blogPostId: integer('blog_post_id').references(() => blogPosts.id),
   solvedAt: timestamp('solved_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
 // Resumes and cover letters attached to job applications. The bytes live here

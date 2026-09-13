@@ -74,6 +74,28 @@ export async function createAttempt(data: {
   return row;
 }
 
+export async function updateAttempt(
+  id: number,
+  data: {
+    status: string;
+    durationMinutes?: number | null;
+    solutionUrl?: string | null;
+    notes?: string | null;
+  }
+): Promise<Attempt | null> {
+  const [row] = await db
+    .update(attempts)
+    .set({ ...data, updatedAt: new Date() })
+    .where(eq(attempts.id, id))
+    .returning();
+  return row ?? null;
+}
+
+export async function getAttemptById(id: number): Promise<Attempt | null> {
+  const rows = await db.select().from(attempts).where(eq(attempts.id, id)).limit(1);
+  return rows[0] ?? null;
+}
+
 export async function createBlogPostFromAttempt(data: {
   slug: string;
   title: string;
