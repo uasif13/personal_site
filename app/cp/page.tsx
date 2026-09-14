@@ -2,7 +2,8 @@ import { cookies } from 'next/headers';
 import Link from 'next/link';
 import Nav from '@/components/Nav';
 import ProblemTable from '@/components/cp/ProblemTable';
-import StatsBar from '@/components/cp/StatsBar';
+import StatsBar, { SOLVED_STATUSES } from '@/components/cp/StatsBar';
+import ActivityCalendar from '@/components/cp/ActivityCalendar';
 import Recommendations from '@/components/cp/Recommendations';
 import { CP_SESSION_COOKIE, verifySessionToken } from '@/lib/auth';
 import {
@@ -107,6 +108,16 @@ export default async function CpTrackerPage() {
           ) : (
             <>
               <StatsBar problems={problems} />
+              <div className="mt-4">
+                <ActivityCalendar
+                  activity={problems.flatMap((p) =>
+                    p.attempts.map((a) => ({
+                      at: new Date(a.solvedAt).toISOString(),
+                      solved: SOLVED_STATUSES.has(a.status),
+                    }))
+                  )}
+                />
+              </div>
               <div className="mt-12">
                 <Recommendations
                   dueReviews={dueReviews}

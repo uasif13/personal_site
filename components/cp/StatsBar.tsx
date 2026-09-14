@@ -4,7 +4,7 @@ interface StatsBarProps {
   problems: ProblemWithAttempts[];
 }
 
-const SOLVED_STATUSES = new Set([
+export const SOLVED_STATUSES = new Set([
   'solved_no_help',
   'solved_with_hints',
   'solved_with_solution',
