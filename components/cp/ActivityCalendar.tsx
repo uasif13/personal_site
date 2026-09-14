@@ -45,13 +45,8 @@ function level(attempts: number): number {
   return 4;
 }
 
-const LEVEL_COLORS = [
-  'var(--border)',
-  'color-mix(in srgb, var(--accent) 30%, var(--bg-card))',
-  'color-mix(in srgb, var(--accent) 55%, var(--bg-card))',
-  'color-mix(in srgb, var(--accent) 80%, var(--bg-card))',
-  'var(--accent)',
-];
+// Per-theme ramps live in globals.css (--heat-0..4).
+const LEVEL_COLORS = [0, 1, 2, 3, 4].map((i) => `var(--heat-${i})`);
 
 function computeStreaks(byDay: Map<string, DayStats>, today: Date) {
   const keys = [...byDay.keys()]

@@ -15,6 +15,12 @@
   --accent-glow: rgba(138,109,31,0.1);
   --border: #e5e1d6;
   --nav-bg: rgba(250,249,245,0.85);
+  /* Activity calendar: empty day, then 1 / 2 / 3-4 / 5+ attempts. */
+  --heat-0: #efece4;
+  --heat-1: #d4a93f;
+  --heat-2: #ad8526;
+  --heat-3: #80621a;
+  --heat-4: #50400f;
   --font-serif: 'Instrument Serif', Georgia, serif;
   --font-sans: 'DM Sans', -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
@@ -31,6 +37,11 @@
   --accent-glow: rgba(201,168,76,0.12);
   --border: #222228;
   --nav-bg: rgba(10,10,12,0.8);
+  --heat-0: #1c1c22;
+  --heat-1: #6b5a22;
+  --heat-2: #9a7b2e;
+  --heat-3: #c9a84c;
+  --heat-4: #f2d47c;
 }
 
 * {
