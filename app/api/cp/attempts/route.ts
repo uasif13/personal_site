@@ -11,6 +11,7 @@ const createAttemptSchema = z.object({
   problemId: z.number().int(),
   status: z.enum([
     'solved_no_help',
+    'solved_multiple_attempts',
     'solved_with_hints',
     'solved_with_solution',
     'attempted_unsolved',

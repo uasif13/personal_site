@@ -7,6 +7,7 @@
 
 export type AttemptStatus =
   | 'solved_no_help'
+  | 'solved_multiple_attempts'
   | 'solved_with_hints'
   | 'solved_with_solution'
   | 'attempted_unsolved';
@@ -18,6 +19,8 @@ export function qualityFromAttempt(
   if (status === 'attempted_unsolved') return 0;
   if (status === 'solved_with_solution') return 1;
   if (status === 'solved_with_hints') return 2;
+  // Got there unaided but not first try: a pass, just the weakest one.
+  if (status === 'solved_multiple_attempts') return 3;
   // solved_no_help — reward faster clean solves with a longer runway.
   if (durationMinutes == null) return 4;
   if (durationMinutes <= 20) return 5;

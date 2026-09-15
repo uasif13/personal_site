@@ -5,6 +5,7 @@ import { getAttemptById, updateAttempt } from '@/lib/db/queries';
 const updateAttemptSchema = z.object({
   status: z.enum([
     'solved_no_help',
+    'solved_multiple_attempts',
     'solved_with_hints',
     'solved_with_solution',
     'attempted_unsolved',

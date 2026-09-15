@@ -12,6 +12,7 @@ interface ProblemTableProps {
 
 const STATUS_LABELS: Record<string, string> = {
   solved_no_help: 'No help',
+  solved_multiple_attempts: 'Multiple attempts',
   solved_with_hints: 'Used hints',
   solved_with_solution: 'Read solution',
   attempted_unsolved: 'Unsolved',
@@ -50,7 +51,8 @@ const STATUS_RANK: Record<string, number> = {
   attempted_unsolved: 0,
   solved_with_solution: 1,
   solved_with_hints: 2,
-  solved_no_help: 3,
+  solved_multiple_attempts: 3,
+  solved_no_help: 4,
 };
 
 type SortField = 'difficulty' | 'status' | 'time' | 'topic';
@@ -288,6 +290,7 @@ export default function ProblemTable({ problems, isAuthed }: ProblemTableProps) 
                   <option value="all">All</option>
                   <option value="unsolved">Unsolved</option>
                   <option value="solved_no_help">No help</option>
+                  <option value="solved_multiple_attempts">Multiple attempts</option>
                   <option value="solved_with_hints">Used hints</option>
                   <option value="solved_with_solution">Read solution</option>
                 </select>

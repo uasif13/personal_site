@@ -6,6 +6,7 @@ interface StatsBarProps {
 
 export const SOLVED_STATUSES = new Set([
   'solved_no_help',
+  'solved_multiple_attempts',
   'solved_with_hints',
   'solved_with_solution',
 ]);

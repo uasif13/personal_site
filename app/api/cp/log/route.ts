@@ -19,6 +19,7 @@ const logProblemSchema = z.object({
   cfRating: z.number().int().optional().nullable(),
   status: z.enum([
     'solved_no_help',
+    'solved_multiple_attempts',
     'solved_with_hints',
     'solved_with_solution',
     'attempted_unsolved',

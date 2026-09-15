@@ -11,6 +11,7 @@ interface EditAttemptFormProps {
 
 const STATUS_OPTIONS = [
   { value: 'solved_no_help', label: 'Solved — no help' },
+  { value: 'solved_multiple_attempts', label: 'Solved — multiple attempts' },
   { value: 'solved_with_hints', label: 'Solved — used hints' },
   { value: 'solved_with_solution', label: 'Solved — read solution' },
   { value: 'attempted_unsolved', label: 'Attempted — unsolved' },

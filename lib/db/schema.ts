@@ -39,7 +39,7 @@ export const attempts = pgTable('attempts', {
   problemId: integer('problem_id')
     .notNull()
     .references(() => problems.id),
-  status: varchar('status', { length: 32 }).notNull(), // 'solved_no_help' | 'solved_with_hints' | 'solved_with_solution' | 'attempted_unsolved'
+  status: varchar('status', { length: 32 }).notNull(), // 'solved_no_help' | 'solved_multiple_attempts' | 'solved_with_hints' | 'solved_with_solution' | 'attempted_unsolved'
   durationMinutes: integer('duration_minutes'),
   solutionUrl: text('solution_url'),
   notes: text('notes'),
