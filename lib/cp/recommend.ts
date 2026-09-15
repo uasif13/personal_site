@@ -76,10 +76,12 @@ const DEFAULT_STARTING_RATING = 900;
 const RATING_BAND_WIDTH = 300;
 
 /**
- * Recommends unattempted Codeforces problems in a rating band just above
- * where the user is solving cleanly (classic "upsolve slightly above your
- * level" CP advice), diversified across tags the user has touched least —
- * same least-covered-first round robin as the NeetCode recommendations.
+ * Recommends unattempted Codeforces problems in a rating band starting at the
+ * user's current edge — the hardest problem they solved unaided but only after
+ * several tries, falling back to their hardest clean solve (classic "upsolve
+ * slightly above your level" CP advice) — diversified across tags they've
+ * touched least, the same least-covered-first round robin as the NeetCode
+ * recommendations.
  */
 export function recommendCodeforcesProblems(
   loggedProblems: ProblemWithAttempts[],
@@ -88,10 +90,19 @@ export function recommendCodeforcesProblems(
   const cfLogged = loggedProblems.filter((p) => p.platform === 'codeforces');
   const loggedUrls = new Set(cfLogged.map((p) => p.url));
 
-  const cleanRatings = cfLogged
-    .filter((p) => p.cfRating != null && p.attempts.some((a) => a.status === 'solved_no_help'))
-    .map((p) => p.cfRating as number);
-  const estimatedRating = cleanRatings.length ? Math.max(...cleanRatings) : DEFAULT_STARTING_RATING;
+  // A problem that took several unaided tries sits right at the current edge,
+  // so it anchors the band ahead of clean solves — those can be well below it.
+  const ratingsSolvedAs = (status: string) =>
+    cfLogged
+      .filter((p) => p.cfRating != null && p.attempts.some((a) => a.status === status))
+      .map((p) => p.cfRating as number);
+
+  const struggledRatings = ratingsSolvedAs('solved_multiple_attempts');
+  const cleanRatings = ratingsSolvedAs('solved_no_help');
+  const anchorRatings = struggledRatings.length ? struggledRatings : cleanRatings;
+  const estimatedRating = anchorRatings.length
+    ? Math.max(...anchorRatings)
+    : DEFAULT_STARTING_RATING;
 
   const lowerBound = estimatedRating;
   const upperBound = estimatedRating + RATING_BAND_WIDTH;
