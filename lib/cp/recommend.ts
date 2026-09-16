@@ -1,6 +1,6 @@
 import { NEETCODE_250, NEETCODE_250_CATEGORIES, categorySlug, type Neetcode250Problem } from './neetcode250';
 import { CODEFORCES_PROBLEMS, codeforcesUrl, type CodeforcesProblem } from './codeforces';
-import type { ProblemWithAttempts } from '../db/queries';
+import type { DueReview, ProblemWithAttempts } from '../db/queries';
 
 const DIFFICULTY_ORDER: Record<string, number> = { easy: 0, medium: 1, hard: 2 };
 
@@ -70,6 +70,62 @@ export function recommendNewProblems(
   );
 
   return roundRobinPick(queues, limit);
+}
+
+/**
+ * How badly the last attempt went, on a 0-4 scale. A problem that beat you is
+ * worth revisiting before one you solved cleanly, even if both came due today.
+ * No attempt on record sits mid-scale: unknown, not assumed easy.
+ */
+const STATUS_URGENCY: Record<string, number> = {
+  attempted_unsolved: 4,
+  solved_with_solution: 3,
+  solved_with_hints: 2,
+  solved_multiple_attempts: 1,
+  solved_no_help: 0,
+};
+const UNKNOWN_STATUS_URGENCY = 2;
+
+const MAX_OVERDUE_DAYS = 30; // past a month overdue, everything is just "stale"
+const MAX_STRUGGLE_MINUTES = 90;
+const DEFAULT_EASE_FACTOR = 2.5; // SM-2's starting ease; lower means harder recall
+
+/**
+ * Ranks problems that have come due, so the card can show a top few instead of
+ * an unbounded list. Each signal is bounded, so no single one can dominate:
+ * how overdue it is and how hard SM-2 has found it (the review), how badly the
+ * last attempt went (the status), and how long that attempt took (the time).
+ */
+export function rankDueReviews(dueReviews: DueReview[], limit = 6): DueReview[] {
+  const now = Date.now();
+
+  const score = ({ review, lastAttempt }: DueReview): number => {
+    const overdueDays = Math.min(
+      MAX_OVERDUE_DAYS,
+      Math.max(0, (now - new Date(review.nextReviewDate).getTime()) / 86_400_000)
+    );
+    const statusUrgency = lastAttempt
+      ? STATUS_URGENCY[lastAttempt.status] ?? UNKNOWN_STATUS_URGENCY
+      : UNKNOWN_STATUS_URGENCY;
+    const struggleMinutes = Math.min(MAX_STRUGGLE_MINUTES, lastAttempt?.durationMinutes ?? 0);
+    const easePenalty = Math.max(0, DEFAULT_EASE_FACTOR - review.easeFactor);
+
+    return (
+      overdueDays + statusUrgency * 3 + (struggleMinutes / 30) * 2 + easePenalty * 4
+    );
+  };
+
+  return [...dueReviews]
+    .sort((a, b) => {
+      const diff = score(b) - score(a);
+      if (diff !== 0) return diff;
+      // Same score: fall back to the order the query already used.
+      return (
+        new Date(a.review.nextReviewDate).getTime() -
+        new Date(b.review.nextReviewDate).getTime()
+      );
+    })
+    .slice(0, limit);
 }
 
 const DEFAULT_STARTING_RATING = 900;

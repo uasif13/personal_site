@@ -12,7 +12,11 @@ import {
   type DueReview,
   type ProblemWithAttempts,
 } from '@/lib/db/queries';
-import { recommendNewProblems, recommendCodeforcesProblems } from '@/lib/cp/recommend';
+import {
+  recommendNewProblems,
+  recommendCodeforcesProblems,
+  rankDueReviews,
+} from '@/lib/cp/recommend';
 import type { Neetcode250Problem } from '@/lib/cp/neetcode250';
 import type { CodeforcesProblem } from '@/lib/cp/codeforces';
 
@@ -29,12 +33,15 @@ export default async function CpTrackerPage() {
 
   let problems: ProblemWithAttempts[] = [];
   let dueReviews: DueReview[] = [];
+  let dueTotal = 0;
   let newSuggestions: Neetcode250Problem[] = [];
   let cfSuggestions: CodeforcesProblem[] = [];
   let dbError = false;
 
   try {
     [problems, dueReviews] = await Promise.all([getAllProblemsWithAttempts(), getDueReviews()]);
+    dueTotal = dueReviews.length;
+    dueReviews = rankDueReviews(dueReviews);
     newSuggestions = recommendNewProblems(problems);
     cfSuggestions = recommendCodeforcesProblems(problems);
   } catch {
@@ -121,6 +128,7 @@ export default async function CpTrackerPage() {
               <div className="mt-12">
                 <Recommendations
                   dueReviews={dueReviews}
+                  dueTotal={dueTotal}
                   newSuggestions={newSuggestions}
                   cfSuggestions={cfSuggestions}
                   isAuthed={isAuthed}

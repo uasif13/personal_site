@@ -9,6 +9,8 @@ import LogAttemptForm from './LogAttemptForm';
 
 interface RecommendationsProps {
   dueReviews: DueReview[];
+  /** How many are due in total, before the card's top-N cut. */
+  dueTotal: number;
   newSuggestions: Neetcode250Problem[];
   cfSuggestions: CodeforcesProblem[];
   isAuthed: boolean;
@@ -91,6 +93,7 @@ function SuggestionRow({
 
 export default function Recommendations({
   dueReviews,
+  dueTotal,
   newSuggestions,
   cfSuggestions,
   isAuthed,
@@ -142,6 +145,11 @@ export default function Recommendations({
               </div>
             );
           })}
+          {dueTotal > dueReviews.length && (
+            <div className="text-[0.7rem] text-[var(--text-muted)] pt-1">
+              +{dueTotal - dueReviews.length} more due — most pressing shown first
+            </div>
+          )}
         </SuggestionCard>
       )}
 
