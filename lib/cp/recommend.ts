@@ -92,10 +92,21 @@ export function recommendCodeforcesProblems(
 
   // A problem that took several unaided tries sits right at the current edge,
   // so it anchors the band ahead of clean solves — those can be well below it.
+  // Problems recommended from the CF problemset carry their rating in cfRating,
+  // but hand-logged ones leave it null and keep the rating in difficulty ("800").
+  // Reading only cfRating missed every hand-logged problem, which is all of them
+  // so far — the band then always fell back to the default.
+  const ratingOf = (problem: ProblemWithAttempts): number | null => {
+    if (problem.cfRating != null) return problem.cfRating;
+    const fromDifficulty = Number(problem.difficulty.trim());
+    return Number.isInteger(fromDifficulty) && fromDifficulty > 0 ? fromDifficulty : null;
+  };
+
   const ratingsSolvedAs = (status: string) =>
     cfLogged
-      .filter((p) => p.cfRating != null && p.attempts.some((a) => a.status === status))
-      .map((p) => p.cfRating as number);
+      .filter((p) => p.attempts.some((a) => a.status === status))
+      .map(ratingOf)
+      .filter((rating): rating is number => rating != null);
 
   const struggledRatings = ratingsSolvedAs('solved_multiple_attempts');
   const cleanRatings = ratingsSolvedAs('solved_no_help');
