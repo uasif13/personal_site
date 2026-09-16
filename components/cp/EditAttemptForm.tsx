@@ -6,8 +6,12 @@ import type { Attempt } from '@/lib/db/queries';
 
 interface EditAttemptFormProps {
   attempt: Attempt;
+  problemId: number;
+  platform: string;
   onDone: () => void;
 }
+
+const PLATFORMS = ['leetcode', 'codeforces', 'atcoder', 'other'];
 
 const STATUS_OPTIONS = [
   { value: 'solved_no_help', label: 'Solved — no help' },
@@ -17,9 +21,15 @@ const STATUS_OPTIONS = [
   { value: 'attempted_unsolved', label: 'Attempted — unsolved' },
 ];
 
-export default function EditAttemptForm({ attempt, onDone }: EditAttemptFormProps) {
+export default function EditAttemptForm({
+  attempt,
+  problemId,
+  platform: initialPlatform,
+  onDone,
+}: EditAttemptFormProps) {
   const router = useRouter();
   const [status, setStatus] = useState(attempt.status);
+  const [platform, setPlatform] = useState(initialPlatform);
   const [duration, setDuration] = useState(attempt.durationMinutes?.toString() ?? '');
   const [solutionUrl, setSolutionUrl] = useState(attempt.solutionUrl ?? '');
   const [notes, setNotes] = useState(attempt.notes ?? '');
@@ -30,6 +40,22 @@ export default function EditAttemptForm({ attempt, onDone }: EditAttemptFormProp
     e.preventDefault();
     setSubmitting(true);
     setError(null);
+
+    // Platform lives on the problem, so it's a separate call — only made when
+    // it actually changed, to keep a plain note edit from rewriting the problem.
+    if (platform !== initialPlatform) {
+      const problemRes = await fetch(`/api/cp/problems/${problemId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ platform }),
+      });
+
+      if (!problemRes.ok) {
+        setSubmitting(false);
+        setError('Could not change the platform. Are you still logged in?');
+        return;
+      }
+    }
 
     const res = await fetch(`/api/cp/attempts/${attempt.id}`, {
       method: 'PATCH',
@@ -72,6 +98,26 @@ export default function EditAttemptForm({ attempt, onDone }: EditAttemptFormProp
               </option>
             ))}
           </select>
+        </label>
+
+        <label className="flex flex-col gap-1 text-[0.75rem] text-[var(--text-muted)]">
+          Platform
+          <select
+            value={platform}
+            onChange={(e) => setPlatform(e.target.value)}
+            className="bg-[var(--bg)] border border-[var(--border)] rounded px-3 py-2 text-[var(--text)] text-[0.85rem]"
+          >
+            {PLATFORMS.map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
+          </select>
+          {platform !== initialPlatform && (
+            <span className="text-[0.7rem] text-[var(--text-muted)]">
+              Applies to the problem itself, so every attempt on it moves too.
+            </span>
+          )}
         </label>
 
         <label className="flex flex-col gap-1 text-[0.75rem] text-[var(--text-muted)]">

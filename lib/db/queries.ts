@@ -91,6 +91,23 @@ export async function updateAttempt(
   return row ?? null;
 }
 
+/**
+ * Corrects a problem's own fields (as opposed to an attempt's). Platform is the
+ * one that gets mislogged — a Codeforces problem entered as LeetCode — and it
+ * belongs to the problem, so fixing it affects every attempt against it.
+ */
+export async function updateProblem(
+  id: number,
+  data: { platform: string }
+): Promise<Problem | null> {
+  const [row] = await db
+    .update(problems)
+    .set(data)
+    .where(eq(problems.id, id))
+    .returning();
+  return row ?? null;
+}
+
 export async function getAttemptById(id: number): Promise<Attempt | null> {
   const rows = await db.select().from(attempts).where(eq(attempts.id, id)).limit(1);
   return rows[0] ?? null;

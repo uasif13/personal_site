@@ -393,6 +393,8 @@ export default function ProblemTable({ problems, isAuthed }: ProblemTableProps) 
                                   <EditAttemptForm
                                     key={attempt.id}
                                     attempt={attempt}
+                                    problemId={problem.id}
+                                    platform={problem.platform}
                                     onDone={() => setEditingAttemptId(null)}
                                   />
                                 );
