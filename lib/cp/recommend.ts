@@ -74,6 +74,7 @@ export function recommendNewProblems(
 
 const DEFAULT_STARTING_RATING = 900;
 const RATING_BAND_WIDTH = 300;
+const RATING_STEP = 100; // CF ratings are quantized to hundreds.
 
 /**
  * Recommends unattempted Codeforces problems in a rating band starting at the
@@ -111,12 +112,14 @@ export function recommendCodeforcesProblems(
   const struggledRatings = ratingsSolvedAs('solved_multiple_attempts');
   const cleanRatings = ratingsSolvedAs('solved_no_help');
   const anchorRatings = struggledRatings.length ? struggledRatings : cleanRatings;
-  const estimatedRating = anchorRatings.length
-    ? Math.max(...anchorRatings)
-    : DEFAULT_STARTING_RATING;
 
-  const lowerBound = estimatedRating;
-  const upperBound = estimatedRating + RATING_BAND_WIDTH;
+  // Start one rating step above the edge: a problem rated where you already
+  // solve isn't an upsolve, and CF ratings move in hundreds. With nothing to
+  // anchor on the default is itself a starting band, so it isn't stepped up.
+  const lowerBound = anchorRatings.length
+    ? Math.max(...anchorRatings) + RATING_STEP
+    : DEFAULT_STARTING_RATING;
+  const upperBound = lowerBound + RATING_BAND_WIDTH;
 
   const tagCounts = new Map<string, number>();
   for (const p of cfLogged) {
