@@ -4,9 +4,16 @@ import { getProblemById, updateProblem } from '@/lib/db/queries';
 
 // Auth comes from middleware.ts, which gates every mutating method under
 // /api/cp/problems — same as the attempts routes.
-const updateProblemSchema = z.object({
-  platform: z.enum(['leetcode', 'codeforces', 'atcoder', 'other']),
-});
+const updateProblemSchema = z
+  .object({
+    platform: z.enum(['leetcode', 'codeforces', 'atcoder', 'other']).optional(),
+    // Free text because it holds both LeetCode's Easy/Medium/Hard and a
+    // Codeforces rating ("1000"); varchar(32) in the schema caps the length.
+    difficulty: z.string().trim().min(1).max(32).optional(),
+  })
+  .refine((data) => data.platform !== undefined || data.difficulty !== undefined, {
+    message: 'Nothing to update',
+  });
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

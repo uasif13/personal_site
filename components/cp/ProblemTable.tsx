@@ -395,6 +395,7 @@ export default function ProblemTable({ problems, isAuthed }: ProblemTableProps) 
                                     attempt={attempt}
                                     problemId={problem.id}
                                     platform={problem.platform}
+                                    difficulty={problem.difficulty}
                                     onDone={() => setEditingAttemptId(null)}
                                   />
                                 );

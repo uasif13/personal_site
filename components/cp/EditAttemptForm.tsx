@@ -8,6 +8,7 @@ interface EditAttemptFormProps {
   attempt: Attempt;
   problemId: number;
   platform: string;
+  difficulty: string;
   onDone: () => void;
 }
 
@@ -25,11 +26,13 @@ export default function EditAttemptForm({
   attempt,
   problemId,
   platform: initialPlatform,
+  difficulty: initialDifficulty,
   onDone,
 }: EditAttemptFormProps) {
   const router = useRouter();
   const [status, setStatus] = useState(attempt.status);
   const [platform, setPlatform] = useState(initialPlatform);
+  const [difficulty, setDifficulty] = useState(initialDifficulty);
   const [duration, setDuration] = useState(attempt.durationMinutes?.toString() ?? '');
   const [solutionUrl, setSolutionUrl] = useState(attempt.solutionUrl ?? '');
   const [notes, setNotes] = useState(attempt.notes ?? '');
@@ -41,18 +44,26 @@ export default function EditAttemptForm({
     setSubmitting(true);
     setError(null);
 
-    // Platform lives on the problem, so it's a separate call — only made when
-    // it actually changed, to keep a plain note edit from rewriting the problem.
-    if (platform !== initialPlatform) {
+    // Platform and difficulty belong to the problem, not this attempt, so they
+    // go in one separate call — sent only for the fields that actually changed,
+    // to keep a plain note edit from rewriting the problem.
+    const problemChanges: { platform?: string; difficulty?: string } = {};
+    if (platform !== initialPlatform) problemChanges.platform = platform;
+    const trimmedDifficulty = difficulty.trim();
+    if (trimmedDifficulty && trimmedDifficulty !== initialDifficulty) {
+      problemChanges.difficulty = trimmedDifficulty;
+    }
+
+    if (Object.keys(problemChanges).length > 0) {
       const problemRes = await fetch(`/api/cp/problems/${problemId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ platform }),
+        body: JSON.stringify(problemChanges),
       });
 
       if (!problemRes.ok) {
         setSubmitting(false);
-        setError('Could not change the platform. Are you still logged in?');
+        setError('Could not save the platform or difficulty. Are you still logged in?');
         return;
       }
     }
@@ -116,6 +127,21 @@ export default function EditAttemptForm({
           {platform !== initialPlatform && (
             <span className="text-[0.7rem] text-[var(--text-muted)]">
               Applies to the problem itself, so every attempt on it moves too.
+            </span>
+          )}
+        </label>
+
+        <label className="flex flex-col gap-1 text-[0.75rem] text-[var(--text-muted)]">
+          Difficulty
+          <input
+            value={difficulty}
+            onChange={(e) => setDifficulty(e.target.value)}
+            placeholder="Easy / Medium / Hard / 1000"
+            className="bg-[var(--bg)] border border-[var(--border)] rounded px-3 py-2 text-[var(--text)] text-[0.85rem]"
+          />
+          {difficulty.trim() && difficulty.trim() !== initialDifficulty && (
+            <span className="text-[0.7rem] text-[var(--text-muted)]">
+              Applies to the problem itself, so every attempt on it changes too.
             </span>
           )}
         </label>

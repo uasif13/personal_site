@@ -92,13 +92,14 @@ export async function updateAttempt(
 }
 
 /**
- * Corrects a problem's own fields (as opposed to an attempt's). Platform is the
- * one that gets mislogged — a Codeforces problem entered as LeetCode — and it
- * belongs to the problem, so fixing it affects every attempt against it.
+ * Corrects a problem's own fields (as opposed to an attempt's). Platform and
+ * difficulty both get mislogged — a Codeforces problem entered as LeetCode, a
+ * 1000-rated one tagged 900 — and both belong to the problem, so fixing either
+ * affects every attempt against it. Only the keys passed are touched.
  */
 export async function updateProblem(
   id: number,
-  data: { platform: string }
+  data: { platform?: string; difficulty?: string }
 ): Promise<Problem | null> {
   const [row] = await db
     .update(problems)
