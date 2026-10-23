@@ -2,8 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { CP_SESSION_COOKIE, verifySessionToken } from '@/lib/auth';
 
 const MUTATING_METHODS = new Set(['POST', 'PATCH', 'PUT', 'DELETE']);
-const PROTECTED_API_PREFIXES = ['/api/cp/problems', '/api/cp/attempts', '/api/cp/log'];
-const PROTECTED_PAGE_PREFIXES = ['/cp/admin', '/jobs'];
+const PROTECTED_API_PREFIXES = [
+  '/api/cp/problems',
+  '/api/cp/attempts',
+  '/api/cp/log',
+  '/api/blog',
+];
+const PROTECTED_PAGE_PREFIXES = ['/cp/admin', '/jobs', '/blog/admin'];
 
 // The CP tracker is public to read and private to write. The job tracker is
 // private outright — applications, resumes and notes are nobody else's business —
@@ -41,5 +46,13 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/api/cp/:path*', '/cp/admin/:path*', '/api/jobs/:path*', '/jobs/:path*', '/jobs'],
+  matcher: [
+    '/api/cp/:path*',
+    '/cp/admin/:path*',
+    '/api/jobs/:path*',
+    '/jobs/:path*',
+    '/jobs',
+    '/api/blog/:path*',
+    '/blog/admin/:path*',
+  ],
 };

@@ -8,8 +8,13 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get('next') || '/cp';
-  // One password guards both trackers; name the one the visitor was headed to.
-  const title = next.startsWith('/jobs') ? 'Job Tracker Login' : 'CP Tracker Login';
+  // One password guards the trackers and blog authoring; name wherever the
+  // visitor was headed.
+  const title = next.startsWith('/jobs')
+    ? 'Job Tracker Login'
+    : next.startsWith('/blog')
+      ? 'Blog Login'
+      : 'CP Tracker Login';
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);

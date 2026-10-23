@@ -231,20 +231,47 @@ export async function getDueReviews(): Promise<DueReview[]> {
     .filter((r): r is DueReview => r !== null);
 }
 
+/** Returns `base`, or `base-2`, `base-3`… if earlier posts already took it. */
+async function uniqueSlug(base: string): Promise<string> {
+  const existingSlugs = new Set((await getAllDbBlogPosts()).map((p) => p.slug));
+  let slug = base;
+  let suffix = 2;
+  while (existingSlugs.has(slug)) {
+    slug = `${base}-${suffix}`;
+    suffix += 1;
+  }
+  return slug;
+}
+
+/**
+ * Stores a post written by hand on the site, as opposed to one drafted from a
+ * solve's notes — so it has no problem attached. Lands in the same table, which
+ * lib/blog.ts merges with the markdown files in posts/.
+ */
+export async function createStandaloneBlogPost(data: {
+  title: string;
+  date: string;
+  tags: string[];
+  excerpt: string;
+  content: string;
+}): Promise<DbBlogPost> {
+  // A title of only punctuation/emoji slugifies to an empty string, which would
+  // publish the post at /blog/ — fall back to something addressable.
+  const slug = await uniqueSlug(slugify(data.title) || 'post');
+  const [row] = await db
+    .insert(blogPosts)
+    .values({ ...data, slug })
+    .returning();
+  return row;
+}
+
 /** Drafts a blog post from a solve's strategy notes, deduping the slug. Returns its id. */
 export async function draftBlogPostFromNotes(
   problem: Problem,
   notes: string
 ): Promise<number> {
   const title = `${problem.name} — Strategy`;
-  const baseSlug = slugify(title);
-  const existingSlugs = new Set((await getAllDbBlogPosts()).map((p) => p.slug));
-  let slug = baseSlug;
-  let suffix = 2;
-  while (existingSlugs.has(slug)) {
-    slug = `${baseSlug}-${suffix}`;
-    suffix += 1;
-  }
+  const slug = await uniqueSlug(slugify(title));
 
   const post = await createBlogPostFromAttempt({
     slug,
