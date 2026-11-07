@@ -1,9 +1,8 @@
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 import Nav from '@/components/Nav';
-import ProblemTable from '@/components/cp/ProblemTable';
-import StatsBar, { SOLVED_STATUSES } from '@/components/cp/StatsBar';
-import ActivityCalendar from '@/components/cp/ActivityCalendar';
+import CpBoard from '@/components/cp/CpBoard';
+import StatsBar from '@/components/cp/StatsBar';
 import Recommendations from '@/components/cp/Recommendations';
 import { CP_SESSION_COOKIE, verifySessionToken } from '@/lib/auth';
 import {
@@ -115,17 +114,7 @@ export default async function CpTrackerPage() {
           ) : (
             <>
               <StatsBar problems={problems} />
-              <div className="mt-4">
-                <ActivityCalendar
-                  activity={problems.flatMap((p) =>
-                    p.attempts.map((a) => ({
-                      at: new Date(a.solvedAt).toISOString(),
-                      solved: SOLVED_STATUSES.has(a.status),
-                    }))
-                  )}
-                />
-              </div>
-              <div className="mt-12">
+              <CpBoard problems={problems} isAuthed={isAuthed}>
                 <Recommendations
                   dueReviews={dueReviews}
                   dueTotal={dueTotal}
@@ -133,8 +122,7 @@ export default async function CpTrackerPage() {
                   cfSuggestions={cfSuggestions}
                   isAuthed={isAuthed}
                 />
-                <ProblemTable problems={problems} isAuthed={isAuthed} />
-              </div>
+              </CpBoard>
               {!isAuthed && (
                 <p className="mt-8 text-[0.8rem] text-[var(--text-muted)]">
                   <a

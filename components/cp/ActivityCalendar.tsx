@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { MONTHS, addDays, dayKey, parseDayKey, startOfDay } from '@/lib/cp/dates';
 
 export interface ActivityEntry {
   at: string; // ISO timestamp of the attempt
@@ -9,6 +10,10 @@ export interface ActivityEntry {
 
 interface ActivityCalendarProps {
   activity: ActivityEntry[];
+  /** Day the problem table is filtered to, as a local day key. */
+  selectedDay?: string | null;
+  /** Omit to render a read-only heatmap. */
+  onSelectDay?: (day: string | null) => void;
 }
 
 interface DayStats {
@@ -19,23 +24,7 @@ interface DayStats {
 const PAST_YEAR = 'past';
 const CELL = 11;
 const GAP = 3;
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const WEEKDAY_LABELS = ['', 'Mon', '', 'Wed', '', 'Fri', ''];
-
-// Keyed and iterated in the viewer's local timezone, so a late-night solve lands
-// on the day it actually happened for them. Stepping with the Date constructor
-// (rather than adding 86400000ms) keeps DST transitions from skipping days.
-function dayKey(date: Date): string {
-  return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
-}
-
-function addDays(date: Date, days: number): Date {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + days);
-}
-
-function startOfDay(date: Date): Date {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-}
 
 function level(attempts: number): number {
   if (attempts === 0) return 0;
@@ -50,10 +39,7 @@ const LEVEL_COLORS = [0, 1, 2, 3, 4].map((i) => `var(--heat-${i})`);
 
 function computeStreaks(byDay: Map<string, DayStats>, today: Date) {
   const keys = [...byDay.keys()]
-    .map((k) => {
-      const [y, m, d] = k.split('-').map(Number);
-      return new Date(y, m - 1, d);
-    })
+    .map(parseDayKey)
     .sort((a, b) => a.getTime() - b.getTime());
 
   let longest = 0;
@@ -85,7 +71,11 @@ function formatDate(date: Date): string {
   });
 }
 
-export default function ActivityCalendar({ activity }: ActivityCalendarProps) {
+export default function ActivityCalendar({
+  activity,
+  selectedDay = null,
+  onSelectDay,
+}: ActivityCalendarProps) {
   // Rendering depends on the viewer's clock and timezone, which the server
   // doesn't know — wait for mount to avoid a hydration mismatch.
   const [today, setToday] = useState<Date | null>(null);
@@ -104,6 +94,16 @@ export default function ActivityCalendar({ activity }: ActivityCalendarProps) {
     const el = scrollRef.current;
     if (el) el.scrollLeft = el.scrollWidth;
   }, [today, range]);
+
+  // A day picked from the table's calendar button may sit outside the range on
+  // screen — follow it, so the two views never disagree about what's selected.
+  useEffect(() => {
+    if (!selectedDay || !today) return;
+    const date = parseDayKey(selectedDay);
+    const start = range === PAST_YEAR ? addDays(today, -364) : new Date(Number(range), 0, 1);
+    const end = range === PAST_YEAR ? today : new Date(Number(range), 11, 31);
+    if (date < start || date > end) setRange(String(date.getFullYear()));
+  }, [selectedDay, today, range]);
 
   const byDay = useMemo(() => {
     const map = new Map<string, DayStats>();
@@ -166,7 +166,7 @@ export default function ActivityCalendar({ activity }: ActivityCalendarProps) {
   const { current, longest } = computeStreaks(byDay, today);
   const hovered = hover ? byDay.get(dayKey(hover.date)) : undefined;
 
-  function handleEnter(e: React.MouseEvent<HTMLDivElement>, date: Date) {
+  function handleEnter(e: React.MouseEvent<HTMLElement>, date: Date) {
     const wrapper = wrapperRef.current;
     if (!wrapper) return;
     const cell = e.currentTarget.getBoundingClientRect();
@@ -239,40 +239,55 @@ export default function ActivityCalendar({ activity }: ActivityCalendarProps) {
                 <span className="font-[var(--font-mono)] text-[0.6rem] text-[var(--text-muted)] whitespace-nowrap leading-[11px] overflow-visible">
                   {monthLabels[wi]}
                 </span>
-                {week.map((date, di) =>
-                  date ? (
-                    <div
+                {week.map((date, di) => {
+                  if (!date) return <div key={di} />;
+
+                  const key = dayKey(date);
+                  const attempts = byDay.get(key)?.attempts ?? 0;
+                  const selectable = Boolean(onSelectDay) && attempts > 0;
+
+                  return (
+                    <button
                       key={di}
+                      type="button"
+                      disabled={!selectable}
+                      onClick={() => onSelectDay?.(key === selectedDay ? null : key)}
                       onMouseEnter={(e) => handleEnter(e, date)}
                       onMouseLeave={() => setHover(null)}
-                      aria-label={`${formatDate(date)}: ${byDay.get(dayKey(date))?.attempts ?? 0} attempts`}
-                      className="rounded-[2px]"
+                      aria-label={`${formatDate(date)}: ${attempts} attempts`}
+                      aria-pressed={selectable ? key === selectedDay : undefined}
+                      className={`rounded-[2px] ${selectable ? 'cursor-pointer' : 'cursor-default'}`}
                       style={{
                         width: CELL,
                         height: CELL,
-                        background: LEVEL_COLORS[level(byDay.get(dayKey(date))?.attempts ?? 0)],
+                        background: LEVEL_COLORS[level(attempts)],
+                        // Offset so the ring reads inside the 3px gutter rather
+                        // than crowding the neighbouring days.
+                        outline: key === selectedDay ? '1.5px solid var(--text)' : undefined,
+                        outlineOffset: 1,
                       }}
                     />
-                  ) : (
-                    <div key={di} />
-                  )
-                )}
+                  );
+                })}
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      <div className="flex justify-end items-center gap-1 mt-3 font-[var(--font-mono)] text-[0.6rem] text-[var(--text-muted)]">
-        <span className="mr-1">Less</span>
-        {LEVEL_COLORS.map((color, i) => (
-          <span
-            key={i}
-            className="rounded-[2px]"
-            style={{ width: CELL, height: CELL, background: color }}
-          />
-        ))}
-        <span className="ml-1">More</span>
+      <div className="flex justify-between items-center gap-3 mt-3 font-[var(--font-mono)] text-[0.6rem] text-[var(--text-muted)]">
+        <span>{onSelectDay ? 'Click a day to see its problems below' : ''}</span>
+        <div className="flex items-center gap-1">
+          <span className="mr-1">Less</span>
+          {LEVEL_COLORS.map((color, i) => (
+            <span
+              key={i}
+              className="rounded-[2px]"
+              style={{ width: CELL, height: CELL, background: color }}
+            />
+          ))}
+          <span className="ml-1">More</span>
+        </div>
       </div>
 
       {hover && (

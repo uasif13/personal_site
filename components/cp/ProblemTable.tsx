@@ -2,12 +2,17 @@
 
 import { Fragment, useMemo, useState } from 'react';
 import type { ProblemWithAttempts } from '@/lib/db/queries';
+import { dayKey } from '@/lib/cp/dates';
+import AttemptDatePicker from './AttemptDatePicker';
 import LogAttemptForm from './LogAttemptForm';
 import EditAttemptForm from './EditAttemptForm';
 
 interface ProblemTableProps {
   problems: ProblemWithAttempts[];
   isAuthed: boolean;
+  /** Day shown, as a local day key — shared with the activity heatmap. */
+  dateFilter: string | null;
+  onDateFilterChange: (value: string | null) => void;
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -55,7 +60,7 @@ const STATUS_RANK: Record<string, number> = {
   solved_no_help: 4,
 };
 
-type SortField = 'difficulty' | 'status' | 'time' | 'topic';
+type SortField = 'difficulty' | 'status' | 'time' | 'topic' | 'date';
 type SortDir = 'asc' | 'desc';
 
 function latestAttempt(problem: ProblemWithAttempts) {
@@ -81,6 +86,12 @@ function topicValue(problem: ProblemWithAttempts): string {
   return problem.topics[0] ?? '';
 }
 
+/** When the problem was last attempted; null for problems with no attempts. */
+function dateValue(problem: ProblemWithAttempts): number | null {
+  const latest = latestAttempt(problem);
+  return latest ? new Date(latest.solvedAt).getTime() : null;
+}
+
 /** Ascending/descending compare where missing values (no time logged) always sort last. */
 function compareNullableNumbers(a: number | null, b: number | null, dir: SortDir): number {
   if (a === null && b === null) return 0;
@@ -89,7 +100,12 @@ function compareNullableNumbers(a: number | null, b: number | null, dir: SortDir
   return dir === 'asc' ? a - b : b - a;
 }
 
-export default function ProblemTable({ problems, isAuthed }: ProblemTableProps) {
+export default function ProblemTable({
+  problems,
+  isAuthed,
+  dateFilter,
+  onDateFilterChange,
+}: ProblemTableProps) {
   const [difficulty, setDifficulty] = useState('all');
   const [source, setSource] = useState('all');
   const [status, setStatus] = useState('all');
@@ -101,6 +117,19 @@ export default function ProblemTable({ problems, isAuthed }: ProblemTableProps) 
   const [sortDir, setSortDir] = useState<SortDir>('asc');
   const [platformFilter, setPlatformFilter] = useState<'all' | 'leetcode' | 'codeforces'>('all');
 
+  // How many attempts landed on each day, so the picker can show which days
+  // have anything to look at.
+  const countsByDay = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const problem of problems) {
+      for (const attempt of problem.attempts) {
+        const key = dayKey(new Date(attempt.solvedAt));
+        counts.set(key, (counts.get(key) ?? 0) + 1);
+      }
+    }
+    return counts;
+  }, [problems]);
+
   const filtered = useMemo(() => {
     return problems.filter((p) => {
       if (platformFilter !== 'all' && p.platform !== platformFilter) return false;
@@ -110,6 +139,11 @@ export default function ProblemTable({ problems, isAuthed }: ProblemTableProps) 
       if (topicFilter && !p.topics.some((t) => t.toLowerCase().includes(topicFilter.toLowerCase()))) {
         return false;
       }
+      // A problem belongs to a day if *any* of its attempts happened then, not
+      // just the most recent one.
+      if (dateFilter && !p.attempts.some((a) => dayKey(new Date(a.solvedAt)) === dateFilter)) {
+        return false;
+      }
       if (status !== 'all') {
         const latest = latestAttempt(p);
         if (status === 'unsolved' && latest) return false;
@@ -117,7 +151,7 @@ export default function ProblemTable({ problems, isAuthed }: ProblemTableProps) 
       }
       return true;
     });
-  }, [problems, platformFilter, difficulty, source, status, nameFilter, topicFilter]);
+  }, [problems, platformFilter, difficulty, source, status, nameFilter, topicFilter, dateFilter]);
 
   const sorted = useMemo(() => {
     if (!sortField) return filtered;
@@ -131,6 +165,8 @@ export default function ProblemTable({ problems, isAuthed }: ProblemTableProps) 
           return dirMul * (statusRank(a) - statusRank(b));
         case 'time':
           return compareNullableNumbers(timeValue(a), timeValue(b), sortDir);
+        case 'date':
+          return compareNullableNumbers(dateValue(a), dateValue(b), sortDir);
         case 'topic':
           return dirMul * topicValue(a).localeCompare(topicValue(b));
         default:
@@ -144,7 +180,8 @@ export default function ProblemTable({ problems, isAuthed }: ProblemTableProps) 
       setSortDir((dir) => (dir === 'asc' ? 'desc' : 'asc'));
     } else {
       setSortField(field);
-      setSortDir('asc');
+      // Dates are most useful newest-first; everything else reads low-to-high.
+      setSortDir(field === 'date' ? 'desc' : 'asc');
     }
   }
 
@@ -162,21 +199,28 @@ export default function ProblemTable({ problems, isAuthed }: ProblemTableProps) 
         <div className="text-[0.75rem] text-[var(--text-muted)] font-[var(--font-mono)]">
           {sorted.length} problem{sorted.length === 1 ? '' : 's'}
         </div>
-        <select
-          value={source}
-          onChange={(e) => setSource(e.target.value)}
-          className="bg-[var(--bg-card)] border border-[var(--border)] rounded px-3 py-2 text-[0.8rem] text-[var(--text)]"
-        >
-          <option value="all">All sources</option>
-          <option value="neetcode250">NeetCode 250</option>
-          <option value="codeforces">Codeforces</option>
-          <option value="youkn0wwho">youkn0wwho</option>
-          <option value="custom">Custom</option>
-        </select>
+        <div className="flex items-center gap-2">
+          <AttemptDatePicker
+            value={dateFilter}
+            onChange={onDateFilterChange}
+            countsByDay={countsByDay}
+          />
+          <select
+            value={source}
+            onChange={(e) => setSource(e.target.value)}
+            className="bg-[var(--bg-card)] border border-[var(--border)] rounded px-3 py-2 text-[0.8rem] text-[var(--text)]"
+          >
+            <option value="all">All sources</option>
+            <option value="neetcode250">NeetCode 250</option>
+            <option value="codeforces">Codeforces</option>
+            <option value="youkn0wwho">youkn0wwho</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
       </div>
 
       <div className="overflow-x-auto border border-[var(--border)] rounded-lg">
-        <table className="w-full border-collapse text-[0.85rem] min-w-[720px]">
+        <table className="w-full border-collapse text-[0.85rem] min-w-[800px]">
           <thead>
             <tr className="bg-[var(--bg-card)] border-b border-[var(--border)]">
               <th className="text-left font-[var(--font-mono)] text-[0.65rem] text-[var(--text-muted)] tracking-[0.08em] uppercase px-4 py-3">
@@ -212,6 +256,14 @@ export default function ProblemTable({ problems, isAuthed }: ProblemTableProps) 
                   className="flex items-center gap-1 font-[var(--font-mono)] text-[0.65rem] text-[var(--text-muted)] tracking-[0.08em] uppercase hover:text-[var(--accent)]"
                 >
                   Time {sortField === 'time' && (sortDir === 'asc' ? '▲' : '▼')}
+                </button>
+              </th>
+              <th className="text-left px-4 py-3">
+                <button
+                  onClick={() => toggleSort('date')}
+                  className="flex items-center gap-1 font-[var(--font-mono)] text-[0.65rem] text-[var(--text-muted)] tracking-[0.08em] uppercase hover:text-[var(--accent)]"
+                >
+                  Date {sortField === 'date' && (sortDir === 'asc' ? '▲' : '▼')}
                 </button>
               </th>
               <th className="text-left font-[var(--font-mono)] text-[0.65rem] text-[var(--text-muted)] tracking-[0.08em] uppercase px-4 py-3">
@@ -298,9 +350,20 @@ export default function ProblemTable({ problems, isAuthed }: ProblemTableProps) 
               <th className="px-4 pb-3" />
               <th className="px-4 pb-3" />
               <th className="px-4 pb-3" />
+              <th className="px-4 pb-3" />
             </tr>
           </thead>
           <tbody>
+            {sorted.length === 0 && (
+              <tr>
+                <td
+                  colSpan={8}
+                  className="px-4 py-8 text-center text-[0.85rem] text-[var(--text-muted)]"
+                >
+                  Nothing matches these filters.
+                </td>
+              </tr>
+            )}
             {sorted.map((problem) => {
               const latest = latestAttempt(problem);
               const isExpanded = expandedId === problem.id;
@@ -351,6 +414,9 @@ export default function ProblemTable({ problems, isAuthed }: ProblemTableProps) 
                     <td className="px-4 py-3 align-top whitespace-nowrap font-[var(--font-mono)] text-[0.75rem] text-[var(--text-muted)]">
                       {latest?.durationMinutes ? `${latest.durationMinutes}m` : '—'}
                     </td>
+                    <td className="px-4 py-3 align-top whitespace-nowrap font-[var(--font-mono)] text-[0.75rem] text-[var(--text-muted)]">
+                      {latest ? new Date(latest.solvedAt).toLocaleDateString() : '—'}
+                    </td>
                     <td className="px-4 py-3 align-top whitespace-nowrap">
                       {latest?.solutionUrl ? (
                         <a
@@ -378,7 +444,7 @@ export default function ProblemTable({ problems, isAuthed }: ProblemTableProps) 
                   </tr>
                   {isExpanded && (
                     <tr className="border-b border-[var(--border)] last:border-b-0">
-                      <td colSpan={7} className="px-4 pb-4">
+                      <td colSpan={8} className="px-4 pb-4">
                         {problem.attempts.length > 0 && (
                           <div className="flex flex-col gap-3 mb-4">
                             {problem.attempts.map((attempt) => {
